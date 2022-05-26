@@ -46,9 +46,9 @@ app.MapPost("/employees", async (
             return Results.ValidationProblem(erros);
 
         context.Employees.Add(employee);
-        var employeeCallback = await context.SaveChangesAsync();
+        var employeeAddCallback = await context.SaveChangesAsync();
 
-        return employeeCallback > 0
+        return employeeAddCallback > 0
             ? Results.CreatedAtRoute("GetEmployeeById", new { id = employee.Id }, employee)
             : Results.BadRequest("Error on saving the register.");
     })
@@ -56,6 +56,31 @@ app.MapPost("/employees", async (
     .Produces<Employee>(StatusCodes.Status201Created)
     .Produces(StatusCodes.Status400BadRequest)
     .WithName("PostEmployee")
+    .WithTags("Employee");
+
+app.MapPut("/employees/{id}", async (
+    Guid id,
+    MinimalContextDb context,
+    Employee employee) =>
+    {
+        var findEmployeeCallback = await context.Employees.FindAsync(id);
+        if (findEmployeeCallback == null)
+            return Results.NotFound();
+
+        if (!MiniValidator.TryValidate(employee, out var errors))
+            return Results.ValidationProblem(errors);
+
+        context.Employees.Update(employee);
+        var employeeUpdateCallback = await context.SaveChangesAsync();
+
+        return employeeUpdateCallback > 0
+            ? Results.NoContent()
+            : Results.BadRequest("Error on updating the register.");
+    })
+    .ProducesValidationProblem()
+    .Produces(StatusCodes.Status204NoContent)
+    .Produces(StatusCodes.Status400BadRequest)
+    .WithName("PutEmployee")
     .WithTags("Employee");
 
 app.Run();
