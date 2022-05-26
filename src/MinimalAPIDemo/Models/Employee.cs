@@ -5,7 +5,7 @@
         /// <summary>
         /// Identificador
         /// </summary>
-        public Guid Id { get; set; }
+        public Guid Id { get; private set; }
         /// <summary>
         /// Nome
         /// </summary>
@@ -49,7 +49,7 @@
         /// <summary>
         /// Funcionário Ativo
         /// </summary>
-        public bool Active { get; set; }
+        public bool Active { get; private set; }
 
         public Employee()
         {
