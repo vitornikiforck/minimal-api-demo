@@ -46,9 +46,9 @@ app.MapPost("/employees", async (
             return Results.ValidationProblem(erros);
 
         context.Employees.Add(employee);
-        var employeeAddCallback = await context.SaveChangesAsync();
+        var result = await context.SaveChangesAsync();
 
-        return employeeAddCallback > 0
+        return result > 0
             ? Results.CreatedAtRoute("GetEmployeeById", new { id = employee.Id }, employee)
             : Results.BadRequest("Error on saving the register.");
     })
@@ -63,24 +63,47 @@ app.MapPut("/employees/{id}", async (
     MinimalContextDb context,
     Employee employee) =>
     {
-        var findEmployeeCallback = await context.Employees.FindAsync(id);
-        if (findEmployeeCallback == null)
+        var findEmployee = await context.Employees.FindAsync(id);
+        if (findEmployee == null)
             return Results.NotFound();
 
         if (!MiniValidator.TryValidate(employee, out var errors))
             return Results.ValidationProblem(errors);
 
         context.Employees.Update(employee);
-        var employeeUpdateCallback = await context.SaveChangesAsync();
+        var result = await context.SaveChangesAsync();
 
-        return employeeUpdateCallback > 0
+        return result > 0
             ? Results.NoContent()
             : Results.BadRequest("Error on updating the register.");
     })
     .ProducesValidationProblem()
+    .Produces<Employee>(StatusCodes.Status404NotFound)
     .Produces(StatusCodes.Status204NoContent)
     .Produces(StatusCodes.Status400BadRequest)
     .WithName("PutEmployee")
+    .WithTags("Employee");
+
+app.MapDelete("/employees/{id}", async (
+    Guid id,
+    MinimalContextDb context) => 
+    {
+        var findEmployee = await context.Employees.FindAsync(id);
+        if (findEmployee == null)
+            return Results.NotFound();
+
+        context.Employees.Remove(findEmployee);
+        var result = await context.SaveChangesAsync();
+
+        return result > 0
+            ? Results.NoContent()
+            : Results.BadRequest("Error on deleting the register.");
+    })
+    .ProducesValidationProblem()
+    .Produces(StatusCodes.Status400BadRequest)
+    .Produces(StatusCodes.Status204NoContent)
+    .Produces<Employee>(StatusCodes.Status404NotFound)
+    .WithName("DeleteEmployee")
     .WithTags("Employee");
 
 app.Run();
